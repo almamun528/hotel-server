@@ -2,7 +2,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const port = process.env.PORT || 300;
+const port = process.env.PORT || 3000;
 const app = express();
 // middleWear
 app.use(cors());
@@ -47,7 +47,19 @@ async function run() {
       res.send(result);
     });
     // ! Users Booking API
-  
+    app.post("/hotel-booking", async (req, res) => {
+      const application = req.body;
+      console.log(application) 
+
+      const result = await roomBookingCollection.insertOne(application);
+      res.send(result)
+    });
+    // ! Show booking List to User 
+    app.get('/myBooking', async(req, res)=>{
+        const bookedRoom = req.body 
+        const result = await roomBookingCollection.find(bookedRoom).toArray()
+        res.send(result)
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
