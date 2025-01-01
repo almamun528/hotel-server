@@ -46,20 +46,25 @@ async function run() {
       const result = await hotelCollection.findOne(query);
       res.send(result);
     });
-    // ! Users Booking API
+    // ! Users Booking API 
     app.post("/hotel-booking", async (req, res) => {
       const application = req.body;
-      console.log(application) 
+      console.log(application);
 
       const result = await roomBookingCollection.insertOne(application);
-      res.send(result)
+      res.send(result);
     });
-    // ! Show booking List to User 
-    app.get('/myBooking', async(req, res)=>{
-        const bookedRoom = req.body 
-        const result = await roomBookingCollection.find(bookedRoom).toArray()
+    // ! Show booking List to User
+    app.get("/myBooking", async (req, res) => {
+        const email = req.query.email 
+        const query = { myEmail : email};
+        const result = await roomBookingCollection.find(query).toArray()
         res.send(result)
-    })
+    });
+
+
+    // ! Create DataBase and Store review
+ 
 
     await client.db("admin").command({ ping: 1 });
     console.log(
