@@ -29,9 +29,8 @@ async function run() {
     //! Database Collection
     await client.connect();
     const hotelCollection = client.db("hotelCollection").collection("hotel");
-    const roomBookingCollection = client
-      .db("hotelCollection")
-      .collection("booking");
+    const roomBookingCollection = client.db("hotelCollection").collection("booking");
+    const reviewCollection = client.db("hotelCollection").collection("review");
     // Send a ping to confirm a successful connection
 
     // !All Hotel Booking Show to user.
@@ -50,7 +49,6 @@ async function run() {
     app.post("/hotel-booking", async (req, res) => {
       const application = req.body;
       console.log(application);
-
       const result = await roomBookingCollection.insertOne(application);
       res.send(result);
     });
@@ -64,7 +62,11 @@ async function run() {
 
 
     // ! Create DataBase and Store review
- 
+     app.post('/myBooking', async(req, res)=>{
+        const review = req.body 
+        const result = await reviewCollection.insertOne(review) 
+        res.send(result)
+     })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
