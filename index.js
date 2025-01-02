@@ -67,6 +67,11 @@ async function run() {
         const result = await reviewCollection.insertOne(review) 
         res.send(result)
      })
+    //  ! Show the Review to the User (API)
+    app.get('/user-reviews', async(req, res)=>{
+        const reviews = await reviewCollection.find().toArray()
+        res.send(reviews)
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
