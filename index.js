@@ -72,7 +72,13 @@ async function run() {
         const reviews = await reviewCollection.find().toArray()
         res.send(reviews)
     })
-
+// !Delete API (remove booking from my Booking Route)
+   app.delete("/myBooking/:id", async (req, res) => {
+     const id = req.params.id;
+     const query = { _id: new ObjectId(id) };
+     const result = await roomBookingCollection.deleteOne(query);
+     res.send(result);
+   });
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
