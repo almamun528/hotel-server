@@ -2,12 +2,19 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const jwt = require('jsonwebtoken');
+const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 3000;
 const app = express();
 // middleWear
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials:true 
+  })
+);
 app.use(express.json());
-
+app.use(cookieParser())
 app.get("/", (req, res) => {
   console.log("Server is running into get-operation index true");
 });
@@ -31,6 +38,27 @@ async function run() {
     const hotelCollection = client.db("hotelCollection").collection("hotel");
     const roomBookingCollection = client.db("hotelCollection").collection("booking");
     const reviewCollection = client.db("hotelCollection").collection("review");
+
+    // !Auth Related APIs
+    
+    app.post('/jwt', (req, res)=>{
+        const user = req.body
+        const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+            expiresIn:'3h'})
+            res.cookie('token',token, {
+                httpOnly:true,
+                secure:false
+            })
+            .send({success:true})
+    })
+    app.post('/logout', (req, res)=>{
+        res
+        .clearCookie('token',{
+            httpOnly:true,
+            secure:false,
+        })
+        .send({success:true})
+    })
     // Send a ping to confirm a successful connection
 
     // !All Hotel Booking Show to user.
@@ -130,3 +158,4 @@ app.listen(port, () => {
 
 // USER_NAME=hotel-server
 // PASSWORD=qBCnDgBcMW3aVGK3
+// ACCESS_TOKEN='aff07186043237300be78662d8e842b7bab4b52cde7aa887b29f3b592267ad7ca51193ef4fbca5b2995c3544fce6696b9499b4c31b80bf5982c059a7c00e02d0'
