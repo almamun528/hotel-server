@@ -36,29 +36,33 @@ async function run() {
     //! Database Collection
     await client.connect();
     const hotelCollection = client.db("hotelCollection").collection("hotel");
-    const roomBookingCollection = client.db("hotelCollection").collection("booking");
+    const roomBookingCollection = client
+      .db("hotelCollection")
+      .collection("booking");
     const reviewCollection = client.db("hotelCollection").collection("review");
 
     // !Auth Related APIs
-    
-    app.post('/jwt', (req, res)=>{
-        const user = req.body
-        const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
-            expiresIn:'3h'})
-            res.cookie('token',token, {
-                httpOnly:true,
-                secure:false
-            })
-            .send({success:true})
-    })
-    app.post('/logout', (req, res)=>{
-        res
-        .clearCookie('token',{
-            httpOnly:true,
-            secure:false,
+
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+        expiresIn: "3h",
+      });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: false,
         })
-        .send({success:true})
-    })
+        .send({ success: true });
+    });
+    app.post("/logout", (req, res) => {
+      res
+        .clearCookie("token", {
+          httpOnly: true,
+          secure: false,
+        })
+        .send({ success: true });
+    });
     // Send a ping to confirm a successful connection
 
     // !All Hotel Booking Show to user.
@@ -73,7 +77,7 @@ async function run() {
       const result = await hotelCollection.findOne(query);
       res.send(result);
     });
-    // ! Users Booking API 
+    // ! Users Booking API
     app.post("/hotel-booking", async (req, res) => {
       const application = req.body;
       console.log(application);
@@ -82,64 +86,83 @@ async function run() {
     });
     // ! Show booking List to User
     app.get("/myBooking", async (req, res) => {
-        const email = req.query.email 
-        const query = { myEmail : email};
-        const result = await roomBookingCollection.find(query).toArray()
-        res.send(result)
+      const email = req.query.email;
+      const query = { myEmail: email };
+      const result = await roomBookingCollection.find(query).toArray();
+      res.send(result);
     });
 
-
     // ! Create DataBase and Store review
-     app.post('/myBooking', async(req, res)=>{
-        const review = req.body 
-        const result = await reviewCollection.insertOne(review) 
-        res.send(result)
-     })
+    app.post("/myBooking", async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.send(result);
+    });
     //  ! Show the Review to the User (API)
-    app.get('/user-reviews', async(req, res)=>{
-        const reviews = await reviewCollection.find().toArray()
-        res.send(reviews)
-    })
-// !Delete API (remove booking from my Booking Route)
-   app.delete("/myBooking/:id", async (req, res) => {
-     const id = req.params.id;
-     const query = { _id: new ObjectId(id) };
-     const result = await roomBookingCollection.deleteOne(query);
-     res.send(result);
-   });
-// ! Update the date 
-app.put("/update-booking/:id", async (req, res) => {
-  const bookingId = req.params.id;
-  const { newDate } = req.body;
+    app.get("/user-reviews", async (req, res) => {
+      const reviews = await reviewCollection.find().toArray();
+      res.send(reviews);
+    });
+    // !Delete API (remove booking from my Booking Route)
+    app.delete("/myBooking/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await roomBookingCollection.deleteOne(query);
+      res.send(result);
+    });
+    
+    // ! Update the booking date
+    app.put("/update-booking/:id", async (req, res) => {
+      const bookingId = req.params.id;
+      const { newDate } = req.body;
 
-  if (!ObjectId.isValid(bookingId)) {
-    return res.status(400).json({ success: false, message: "Invalid ID" });
-  }
+      // Check if the provided ID is valid
+      if (!ObjectId.isValid(bookingId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid booking ID." });
+      }
 
-  try {
-    const result = await bookingsCollection.updateOne(
-      { _id: new ObjectId(bookingId) },
-      { $set: { bookingDate: newDate } }
-    );
+      // Validate that a new date is provided
+      if (!newDate) {
+        return res
+          .status(400)
+          .json({ success: false, message: "New date is required." });
+      }
 
-    // Optional check and more specific error messages
-    if (result.modifiedCount === 1) {
-      res.json({ success: true, message: "Booking date updated successfully" });
-    } else {
-      const errorMessage =
-        result.matchedCount === 0
-          ? "Booking not found"
-          : "Document not updated";
-      res.status(404).json({
-        success: false,
-        message: errorMessage,
-      });
-    }
-  } catch (error) {
-    console.error("Error updating booking:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
-  }
-});
+      try {
+        // Update the booking date in the database
+        const result = await bookingsCollection.updateOne(
+          { _id: new ObjectId(bookingId) },
+          { $set: { bookingDate: newDate } }
+        );
+
+        // Handle cases based on the result
+        if (result.matchedCount === 0) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Booking not found." });
+        }
+
+        if (result.modifiedCount === 0) {
+          return res.status(400).json({
+            success: false,
+            message: "Booking date is the same as the current date.",
+          });
+        }
+
+        res.status(200).json({
+          success: true,
+          message: "Booking date updated successfully.",
+        });
+      } catch (error) {
+        console.error("Error updating booking date:", error);
+        res.status(500).json({
+          success: false,
+          message: "An error occurred while updating the booking date.",
+        });
+      }
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
