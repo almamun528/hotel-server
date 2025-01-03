@@ -15,6 +15,22 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser())
+const verifyToken = (req, res, next)=>{
+    const token = req.cookies?.token 
+    if(!token){
+        return res.status(401).send({message:'unauthorized  token'})
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded)=>{
+        if(err){
+            return res.send(401).send({ message: "unauthorized access" });
+        }
+        req.user = decoded;
+        next()
+    })
+}
+
+
+
 app.get("/", (req, res) => {
   console.log("Server is running into get-operation index true");
 });
@@ -85,9 +101,14 @@ async function run() {
       res.send(result);
     });
     // ! Show booking List to User
-    app.get("/myBooking", async (req, res) => {
+    app.get("/myBooking",verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { myEmail: email };
+
+      console.log(req.cookies?.token);
+      if(req.user.email !== req.query.email){
+        return res.status(403).send('access forbidden')
+      }
       const result = await roomBookingCollection.find(query).toArray();
       res.send(result);
     });
@@ -110,7 +131,7 @@ async function run() {
       const result = await roomBookingCollection.deleteOne(query);
       res.send(result);
     });
-    
+
     // ! Update the booking date
     app.put("/update-booking/:id", async (req, res) => {
       const bookingId = req.params.id;
