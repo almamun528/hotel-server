@@ -79,6 +79,40 @@ async function run() {
      const result = await roomBookingCollection.deleteOne(query);
      res.send(result);
    });
+// ! Update the date 
+app.put("/update-booking/:id", async (req, res) => {
+  const bookingId = req.params.id;
+  const { newDate } = req.body;
+
+  if (!ObjectId.isValid(bookingId)) {
+    return res.status(400).json({ success: false, message: "Invalid ID" });
+  }
+
+  try {
+    const result = await bookingsCollection.updateOne(
+      { _id: new ObjectId(bookingId) },
+      { $set: { bookingDate: newDate } }
+    );
+
+    // Optional check and more specific error messages
+    if (result.modifiedCount === 1) {
+      res.json({ success: true, message: "Booking date updated successfully" });
+    } else {
+      const errorMessage =
+        result.matchedCount === 0
+          ? "Booking not found"
+          : "Document not updated";
+      res.status(404).json({
+        success: false,
+        message: errorMessage,
+      });
+    }
+  } catch (error) {
+    console.error("Error updating booking:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
