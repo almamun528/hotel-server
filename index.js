@@ -9,8 +9,8 @@ const app = express();
 // middleWear
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
-    credentials:true 
+    origin: ["https://hotel-haven-41b91.web.app/"],
+    credentials: true,
   })
 );
 app.use(express.json());
