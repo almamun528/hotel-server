@@ -9,7 +9,7 @@ const app = express();
 // middleWear
 app.use(
   cors({
-    origin: ["https://hotel-haven-41b91.web.app/"],
+    origin: ["https://hotel-haven-41b91.web.app"],
     credentials: true,
   })
 );
@@ -67,7 +67,9 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
+          // secure: false,
+          secure: process.env.NODE_ENV === "production" ? true : false,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ success: true });
     });
@@ -75,7 +77,9 @@ async function run() {
       res
         .clearCookie("token", {
           httpOnly: true,
-          secure: false,
+          // secure: false,
+          secure: process.env.NODE_ENV === "production" ? true : false,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ success: true });
     });
